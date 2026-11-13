@@ -72,6 +72,7 @@ int pollDialDigit() {
     if (state != lastState) {
       lastState = state;
       changes++;
+      Serial.printf("Dial edge: %d (changes=%lu) pickedUp=%d\n", state, changes, isPhonePickedUp());
 
       // The timer restarts on every pulse, so the digit is evaluated 1500 ms
       // after the LAST pulse (when the dial has returned to rest).
