@@ -301,6 +301,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         memcpy(url, payload, length);
         url[length] = '\0';
 
+        Serial.print("Audio URL received: ");
+        Serial.println(url);
         queueAudioUrl(url);
     }
 
