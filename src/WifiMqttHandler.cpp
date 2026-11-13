@@ -369,7 +369,7 @@ void mqttSetup()
   setAudioGain(volumePercent / 100.0f);
   mqtt.setServer(mqtt_host, mqtt_port);
   // The combined device discovery payload is larger than 1 KB.
-  mqtt.setBufferSize(2048);
+  mqtt.setBufferSize(4096);
   mqtt.setCallback(mqttCallback);
 }
 
