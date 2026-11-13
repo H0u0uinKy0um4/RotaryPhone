@@ -131,6 +131,7 @@ void loop() {
   } else {
     // Keep the pulse reader idle while hung up.
     dialReset();
+    Serial.println("Dial ignored: phone not picked up");
   }
 
   // Digit feedback pip, after TIME1.

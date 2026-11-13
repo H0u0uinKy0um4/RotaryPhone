@@ -265,6 +265,7 @@ static AudioGeneratorMP3* mp3 = nullptr;
 static ExistingI2SOutput* audioOutput = nullptr;
 
 static void cleanupAudio() {
+    unsigned long t0 = millis();
     if (mp3) {
         if (mp3->isRunning()) mp3->stop();
         delete mp3; mp3 = nullptr;
@@ -272,6 +273,7 @@ static void cleanupAudio() {
     if (audioBuffer) { delete audioBuffer; audioBuffer = nullptr; }
     if (httpSource) { httpSource->close(); delete httpSource; httpSource = nullptr; }
     if (audioOutput) { audioOutput->stop(); delete audioOutput; audioOutput = nullptr; }
+    Serial.printf("cleanupAudio took %lu ms\n", millis() - t0);
 }
 
 void IRAM_ATTR audioMuteImmediately() {
