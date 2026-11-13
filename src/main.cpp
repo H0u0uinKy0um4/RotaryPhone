@@ -20,7 +20,7 @@ const char* MQTT_HOOK_TOPIC = "rotarydial/hook";
 //   chime --> TIME4                      gives up if nothing arrives by then
 // ---------------------------------------------------------------------------
 static constexpr unsigned long TIME1_DIGIT_BEEP_MS = 0;
-static constexpr unsigned long TIME2_SEND_MS = 2800;
+static constexpr unsigned long TIME2_SEND_MS = 3200;
 static constexpr unsigned long TIME3_TUNE_MS = 0;
 static constexpr unsigned long TIME4_TUNE_HOLD_MS = 8000;
 
@@ -111,37 +111,30 @@ void loop() {
     }
   }
 
-  // Only accept dial pulses while the phone is actually picked up (off-hook).
-  // This prevents accidental/spurious dialing right after a hang-up.
-  if (isPhonePickedUp()) {
-    int number = pollDialDigit();
-    if (number != -1) {
-      Serial.print("Vytocene cislo (zmeny/2): ");
-      Serial.println(number);
+  int number = pollDialDigit();
+  if (number != -1) {
+    Serial.print("Vytocene cislo (zmeny/2): ");
+    Serial.println(number);
 
-      // If the previous number was already sent, start a new one.
-      if (dialNumberSent()) dialReset();
+    // If the previous number was already sent, start a new one.
+    if (dialNumberSent()) dialReset();
 
-      dialAppend(number);
-      if (beepsEnabled()) {
-        beepScheduled = true;
-        beepAtMs = millis() + TIME1_DIGIT_BEEP_MS;
-      }
+    dialAppend(number);
+    if (beepsEnabled()) {
+      beepScheduled = true;
+      beepAtMs = millis() + TIME1_DIGIT_BEEP_MS;
     }
-  } else {
-    // Keep the pulse reader idle while hung up.
-    dialReset();
   }
 
   // Digit feedback pip, after TIME1.
   if (beepScheduled && (int32_t)(millis() - beepAtMs) >= 0) {
     beepScheduled = false;
-    if (isPhonePickedUp()) playDigitBeep();
+    playDigitBeep();
   }
 
   // TIME2 without a new digit means the number is complete; only send while
   // the phone is still picked up.
-  if (isPhonePickedUp() && dialNumberReady(TIME2_SEND_MS)) {
+  if (dialNumberReady(TIME2_SEND_MS)) {
     mqttPublish(MQTT_DIAL_TOPIC, dialNumber());
     dialMarkNumberSent();
     if (tuneEnabled()) {
@@ -156,6 +149,6 @@ void loop() {
   // chime is pointless, so skip it.
   if (tuneScheduled && (int32_t)(millis() - tuneAtMs) >= 0) {
     tuneScheduled = false;
-    if (isPhonePickedUp() && !isAudioPlaying()) playConfirmationTune(TIME4_TUNE_HOLD_MS);
+    if (!isAudioPlaying()) playConfirmationTune(TIME4_TUNE_HOLD_MS);
   }
 }
