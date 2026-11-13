@@ -90,6 +90,14 @@ void loop() {
   }
 
   handleMqtt();
+
+  // No audio while the phone is hung up (hook closed).
+  if (!isPhonePickedUp()) {
+    beepScheduled = false;
+    tuneScheduled = false;
+    stopAudio();
+  }
+
   handleAudio();
 
   bool pickedUp = false;
