@@ -147,24 +147,32 @@ static const char* BEEPS_SET_TOPIC = "rotarydial/settings/beeps/set";
 static const char* BEEPS_STATE_TOPIC = "rotarydial/settings/beeps";
 static const char* TUNE_SET_TOPIC = "rotarydial/settings/tune/set";
 static const char* TUNE_STATE_TOPIC = "rotarydial/settings/tune";
+static const char* VOLUME_SET_TOPIC = "rotarydial/settings/volume/set";
+static const char* VOLUME_STATE_TOPIC = "rotarydial/settings/volume";
 
 static Preferences settings;
 static bool beepsOn = true;
 static bool tuneOn = true;
+static int volumePercent = 100;
 
 bool beepsEnabled() { return beepsOn; }
 bool tuneEnabled() { return tuneOn; }
+int volumeLevel() { return volumePercent; }
 
 static void loadSettings() {
   settings.begin("rotaryphone", false);
   beepsOn = settings.getBool("beeps", true);
   tuneOn = settings.getBool("tune", true);
-  Serial.printf("Settings: beeps=%d tune=%d\n", beepsOn, tuneOn);
+  volumePercent = settings.getInt("volume", 100);
+  if (volumePercent < 0) volumePercent = 0;
+  if (volumePercent > 100) volumePercent = 100;
+  Serial.printf("Settings: beeps=%d tune=%d volume=%d\n", beepsOn, tuneOn, volumePercent);
 }
 
 static void storeSettings() {
   settings.putBool("beeps", beepsOn);
   settings.putBool("tune", tuneOn);
+  settings.putInt("volume", volumePercent);
 }
 
 WiFiClient wifiClient;
@@ -173,6 +181,9 @@ PubSubClient mqtt(wifiClient);
 static void publishSettings() {
   mqtt.publish(BEEPS_STATE_TOPIC, beepsOn ? "ON" : "OFF", true);
   mqtt.publish(TUNE_STATE_TOPIC, tuneOn ? "ON" : "OFF", true);
+  char buf[8];
+  snprintf(buf, sizeof(buf), "%d", volumePercent);
+  mqtt.publish(VOLUME_STATE_TOPIC, buf, true);
 }
 
 // Accepts ON/1/TRUE (any case); everything else is treated as off.
@@ -250,6 +261,23 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         return;
     }
 
+    if (strcmp(topic, VOLUME_SET_TOPIC) == 0) {
+        char buf[8];
+        unsigned int copyLen = length;
+        if (copyLen >= sizeof(buf)) copyLen = sizeof(buf) - 1;
+        memcpy(buf, payload, copyLen);
+        buf[copyLen] = '\0';
+        int v = atoi(buf);
+        if (v < 0) v = 0;
+        if (v > 100) v = 100;
+        volumePercent = v;
+        storeSettings();
+        setAudioGain(volumePercent / 100.0f);
+        publishSettings();
+        Serial.printf("Volume set to %d%%\n", volumePercent);
+        return;
+    }
+
     if (strcmp(topic, "rotarydial/audio/url") == 0) {
         char url[201];
 
@@ -324,6 +352,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 void mqttSetup()
 {
   loadSettings();
+  setAudioGain(volumePercent / 100.0f);
   mqtt.setServer(mqtt_host, mqtt_port);
   // The combined device discovery payload is larger than 1 KB.
   mqtt.setBufferSize(2048);
@@ -374,7 +403,7 @@ void handleMqtt() {
             if (mqtt.subscribe(MP_PLAY_TOPIC)) {
                 Serial.println("Subscribed to MP play topic");
             }
-            if (mqtt.subscribe(BEEPS_SET_TOPIC) && mqtt.subscribe(TUNE_SET_TOPIC)) {
+            if (mqtt.subscribe(BEEPS_SET_TOPIC) && mqtt.subscribe(TUNE_SET_TOPIC) && mqtt.subscribe(VOLUME_SET_TOPIC)) {
                 Serial.println("Subscribed to settings topics");
             }
 

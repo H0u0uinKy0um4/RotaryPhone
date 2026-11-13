@@ -36,6 +36,10 @@ void playDigitBeep();
 // Call frequently from the main loop to drive playback.
 void handleAudio();
 
+// Set output gain (0.0 .. 1.0, scaled by the base gain).
+void setAudioGain(float gain);
+float getAudioGain();
+
 // Immediately silence the I2S output (safe to call from an ISR).
 void audioMuteImmediately();
 

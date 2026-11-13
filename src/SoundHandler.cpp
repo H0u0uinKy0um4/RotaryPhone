@@ -11,7 +11,8 @@
 
 static constexpr size_t AUDIO_URL_SIZE = 201;
 static constexpr size_t AUDIO_BUFFER_SIZE = 4096;
-static constexpr float AUDIO_GAIN = 0.65f;
+static constexpr float AUDIO_GAIN_BASE = 0.65f;
+static float audioGain = AUDIO_GAIN_BASE;
 
 // Set from the hook-switch ISR to silence playback immediately.
 static volatile bool audioMuted = false;
@@ -25,7 +26,7 @@ public:
         SetRate(SAMPLE_RATE);
         SetBitsPerSample(16);
         SetChannels(2);
-        SetGain(AUDIO_GAIN);
+        SetGain(audioGain);
     }
 
     bool begin() override {
@@ -56,8 +57,8 @@ public:
     }
 
     bool ConsumeSample(int16_t sample[2]) override {
-        samples[sampleCount++] = (int16_t)(sample[0] * AUDIO_GAIN);
-        samples[sampleCount++] = (int16_t)((channels == 1 ? sample[0] : sample[1]) * AUDIO_GAIN);
+        samples[sampleCount++] = (int16_t)(sample[0] * audioGain);
+        samples[sampleCount++] = (int16_t)((channels == 1 ? sample[0] : sample[1]) * audioGain);
         if (sampleCount >= SAMPLE_CAPACITY) {
             return writeBuffer();
         }
@@ -151,7 +152,7 @@ static void buildTuneBuffer() {
                 envelope *= (float)(noteFrames - i) / tailFrames;
             }
             const float phase = 2.0f * PI * TUNE_NOTES[note] * i / SAMPLE_RATE;
-            const int16_t sample = (int16_t)(sinf(phase) * TUNE_AMPLITUDE * envelope);
+            const int16_t sample = (int16_t)(sinf(phase) * (0.16f * 32767.0f * (audioGain / AUDIO_GAIN_BASE)) * envelope);
             tuneBuffer[frame * 2] = sample;
             tuneBuffer[frame * 2 + 1] = sample;
         }
@@ -224,7 +225,7 @@ static void buildBeepBuffer() {
             envelope *= (float)(BEEP_FRAMES - i) / tailFrames;
         }
         const float phase = 2.0f * PI * BEEP_HZ * i / SAMPLE_RATE;
-        const int16_t sample = (int16_t)(sinf(phase) * BEEP_AMPLITUDE * envelope);
+        const int16_t sample = (int16_t)(sinf(phase) * (0.14f * 32767.0f * (audioGain / AUDIO_GAIN_BASE)) * envelope);
         beepBuffer[i * 2] = sample;
         beepBuffer[i * 2 + 1] = sample;
     }
@@ -280,6 +281,19 @@ void IRAM_ATTR audioMuteImmediately() {
 
 void audioResetMute() {
     audioMuted = false;
+}
+
+void setAudioGain(float gain) {
+    if (gain < 0.0f) gain = 0.0f;
+    if (gain > 1.0f) gain = 1.0f;
+    // Scale relative to the original base gain so 1.0 == original level.
+    audioGain = AUDIO_GAIN_BASE * gain;
+    tuneBufferReady = false;
+    beepBufferReady = false;
+}
+
+float getAudioGain() {
+    return audioGain / AUDIO_GAIN_BASE;
 }
 
 void setupSound() {
