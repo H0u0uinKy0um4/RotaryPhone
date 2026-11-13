@@ -40,6 +40,7 @@ bool AudioFileSourceHTTPStream::open(const char *url)
 {
   pos = 0;
   http.begin(client, url);
+  http.setTimeout(200);
   http.setReuse(true);
 #ifndef ESP32
   http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
@@ -114,7 +115,7 @@ retry:
 
   if (!nonBlock) {
     int start = millis();
-    while ((stream->available() < (int)len) && (millis() - start < 500)) yield();
+    while ((stream->available() < (int)len) && (millis() - start < 100)) yield();
   }
 
   size_t avail = stream->available();
