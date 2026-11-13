@@ -20,7 +20,7 @@ const char* MQTT_HOOK_TOPIC = "rotarydial/hook";
 //   chime --> TIME4                      gives up if nothing arrives by then
 // ---------------------------------------------------------------------------
 static constexpr unsigned long TIME1_DIGIT_BEEP_MS = 0;
-static constexpr unsigned long TIME2_SEND_MS = 1500;
+static constexpr unsigned long TIME2_SEND_MS = 2800;
 static constexpr unsigned long TIME3_TUNE_MS = 0;
 static constexpr unsigned long TIME4_TUNE_HOLD_MS = 8000;
 
@@ -131,7 +131,6 @@ void loop() {
   } else {
     // Keep the pulse reader idle while hung up.
     dialReset();
-    Serial.println("Dial ignored: phone not picked up");
   }
 
   // Digit feedback pip, after TIME1.
