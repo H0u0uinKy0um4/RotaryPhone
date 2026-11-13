@@ -73,6 +73,18 @@ static const char discoveryConfig[] = R"rawliteral(
       "payload_on": "ON",
       "payload_off": "OFF",
       "icon": "mdi:music-note"
+    },
+    "volume": {
+      "platform": "number",
+      "name": "Speaker Volume",
+      "unique_id": "rotary_phone_volume",
+      "default_entity_id": "number.rotary_phone_speaker_volume",
+      "command_topic": "rotarydial/settings/volume/set",
+      "state_topic": "rotarydial/settings/volume",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "icon": "mdi:volume-high"
     }
   }
 }
