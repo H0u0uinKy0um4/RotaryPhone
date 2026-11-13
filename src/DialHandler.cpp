@@ -4,7 +4,7 @@
 
 
 
-static constexpr unsigned long HOOK_DEBOUNCE_MS = 80;
+static constexpr unsigned long HOOK_DEBOUNCE_MS = 30;
 static constexpr size_t DIAL_BUFFER_SIZE = 64;
 
 // Rotary dial pulse reader state.
@@ -103,6 +103,7 @@ void dialReset() {
   changes = 0;
   measuring = false;
   started = 0;
+  lastState = digitalRead(PIN_DIAL);
 }
 
 void dialAppend(int digit) {
