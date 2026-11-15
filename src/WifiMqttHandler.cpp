@@ -31,7 +31,7 @@ static const char discoveryConfig[] = R"rawliteral(
       "unique_id": "rotary_phone_dial",
       "default_entity_id": "sensor.rotary_phone_dial",
       "state_topic": "rotarydial/dial",
-      "icon": "mdi:phone-dial"
+      "icon": "mdi:phone-classic"
     },
     "audio": {
     "platform": "text",
@@ -50,7 +50,7 @@ static const char discoveryConfig[] = R"rawliteral(
       "state_topic": "rotarydial/hook",
       "payload_on": "picked_up",
       "payload_off": "hung_up",
-      "icon": "mdi:phone-in-talk"
+      "icon": "mdi:electric-switch"
     },
     "beeps": {
       "platform": "switch",
@@ -131,6 +131,7 @@ static const char hookDiscoveryConfig[] = R"rawliteral(
   }
 }
 )rawliteral";
+
 
 // Payload for the Dial (Sensor)
 static const char dialDiscoveryConfig[] = R"rawliteral(
@@ -376,12 +377,15 @@ void mqttSetup()
 
 static bool publishDiscovery() {
   bool ok = mqtt.publish(DISCOVERY_TOPIC, discoveryConfig, true);
-  
-  // Publish the Media Player, Hook, and Dial
+
+  // The media player is still a separate discovery entity.
   ok = mqtt.publish(MP_DISCOVERY_TOPIC, mpDiscoveryConfig, true) && ok;
-  ok = mqtt.publish(HOOK_DISCOVERY_TOPIC, hookDiscoveryConfig, true) && ok;
-  ok = mqtt.publish(DIAL_DISCOVERY_TOPIC, dialDiscoveryConfig, true) && ok;
-  
+
+  // Remove the old duplicate Hook/Dial discovery entities retained from
+  // previous firmware versions. They are now part of the combined payload.
+  mqtt.publish(HOOK_DISCOVERY_TOPIC, "", true);
+  mqtt.publish(DIAL_DISCOVERY_TOPIC, "", true);
+
   return ok;
 }
 
