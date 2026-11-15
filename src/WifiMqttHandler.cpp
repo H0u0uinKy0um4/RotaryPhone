@@ -115,39 +115,6 @@ static const char mpDiscoveryConfig[] = R"rawliteral(
 static const char* HOOK_DISCOVERY_TOPIC = "homeassistant/binary_sensor/rotary_phone/hook/config";
 static const char* DIAL_DISCOVERY_TOPIC = "homeassistant/sensor/rotary_phone/dial/config";
 
-// Payload for the Hook (Binary Sensor)
-static const char hookDiscoveryConfig[] = R"rawliteral(
-{
-  "name": "Hook",
-  "unique_id": "rotary_phone_hook_01",
-  "stat_t": "rotarydial/hook",
-  "pl_off": "hung_up",
-  "pl_on": "picked_up",
-  "dev_cla": "door",
-  "device": {
-    "identifiers": ["rotary_phone_esp"],
-    "name": "Rotary Phone",
-    "manufacturer": "DIY"
-  }
-}
-)rawliteral";
-
-
-// Payload for the Dial (Sensor)
-static const char dialDiscoveryConfig[] = R"rawliteral(
-{
-  "name": "Last Dialed Number",
-  "unique_id": "rotary_phone_dial_01",
-  "stat_t": "rotarydial/dial",
-  "icon": "mdi:phone-dial",
-  "device": {
-    "identifiers": ["rotary_phone_esp"],
-    "name": "Rotary Phone",
-    "manufacturer": "DIY"
-  }
-}
-)rawliteral";
-
 const char *wifi_password = WIFI_PASSWORD;
 const char *mqtt_password = MQTT_PASSWORD;
 const char *mqtt_host = MQTT_HOST;
